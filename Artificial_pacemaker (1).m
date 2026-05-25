@@ -1,26 +1,27 @@
-% Artificial Pacemaker Simulation
+
 
 clc; clear; close all;
 
 % Sampling frequency
-fs = 360;               % 360 samples per second (like real ECG data)
+fs = 360;               % 360 samples per second (similar to real ECG)
 t = (0:1/fs:20)';          % 20-second time vector
 
-% Create a simple ECG-like signal
-hr = 60;                % Heart rate (60 beats per minute)
-ecg = 0.6*sin(2*pi*(hr/60)*t) + 0.5*randn(size(t)); % base + noise (randn is mostly in the range of (+-3) ) 
+% Creating a simple ECG-like signal
+hr = 60;                % normal heart rate (60 bpm)
+ecg = 0.6*sin(2*pi*(hr/60)*t) + 0.5*randn(size(t)); 
+%                         base + noise (randn is mostly in the range of (-3 to +3) ) 
 
 % 1. Bandpass filter (Butterworth)
 
 [b,a] = butter(2, [5 15]/(fs/2), 'bandpass');  
 % using butterworth function (which takes normalized freq. as input and "bandpass"
-% allows only that certain range of freq),   to calc the 2 constants a,b used for filtering 
+% allows only that certain range of freq),   to calc the 2 constants a,b used for filtering , then 
 filt_ecg = filtfilt(b, a, ecg); % zero-phase filtering ( by using normal filter func phase shift occurs
 %  so we use filtfilt to ensure zero-phase change , better filtering
 
 
-% 2. Derivative filter
-d_ecg = filter([1 2 0 -2 -1]/8, 1, filt_ecg); % y(x)= [x(n+2)+2x(n+1) -2x(n-1)-x(n-2)]/8 (5-point central differentiation approx. ) 
+% 2. the derivative filter
+d_ecg = filter([1 2 0 -2 -1]/8, 1, filt_ecg); % y(x)= [x(n+2)+2x(n+1) -2x(n-1)-x(n-2)]/8 (5-point central diff. approx. ) 
 % to point out the spikes , which eases the detection of heartbeats. 
 
 % 3. Squaring
@@ -56,7 +57,7 @@ for i = 2:length(t)
         %pace_pulse(i:i+round(T_pulse*fs)) = 1;
     end
 
-    % If no beat detected within escape time → generate pacing pulse
+    % If no beat detected within escape time then generate pacing pulse
     if time_since_beat >= T_escape
         pace_pulse(i:i+round(T_pulse*fs)) = 1;
         num_of_times_paced=num_of_times_paced+1;
